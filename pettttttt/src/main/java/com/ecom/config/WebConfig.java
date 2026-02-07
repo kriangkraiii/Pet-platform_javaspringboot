@@ -1,8 +1,12 @@
 package com.ecom.config;
 
+import java.util.TimeZone;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import jakarta.annotation.PostConstruct;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -51,4 +55,8 @@ public class WebConfig implements WebMvcConfigurer {
 
 		registry.addResourceHandler("/uploads/**").addResourceLocations("file:" + uploadDir);
 	}
+	 @PostConstruct
+	    public void init() {
+	        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Bangkok"));
+	    }
 }

@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{base::layout(~{::section})}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Digital Wallet</title>
+</head>
+
+<body>
+    <section>
+        <div class="container-fluid mt-5 p-5 bg-light">
+            <div class="row">
+                <div class="col-md-10 offset-md-1">
+
+                    <p class="fs-3 text-center"><i class="fa-solid fa-wallet"></i> กระเป๋าเงินดิจิทัล</p>
+                    <hr>
+
+                    <!-- ===== ยอดเงินคงเหลือ ===== -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body text-center">
+                            <h5 class="text-muted">ยอดเงินคงเหลือ</h5>
+                            <h1 class="text-success fw-bold" id="balanceDisplay">
+                                &#3647; <span th:text="${#numbers.formatDecimal(wallet.balance, 1, 2)}">0.00</span>
+                            </h1>
+                            <small class="text-muted">
+                                เติมเงินรวม: &#3647; <span th:text="${#numbers.formatDecimal(wallet.totalTopup, 1, 2)}">0.00</span>
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- ===== ส่วนเติมเงิน ===== -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fa-solid fa-qrcode"></i> เติมเงินผ่าน PromptPay</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- ขั้นตอนที่ 1: ระบุจำนวนเงิน -->
+                            <div id="step1" class="text-center">
+                                <h6 class="mb-3">ขั้นตอนที่ 1: ระบุจำนวนเงินที่ต้องการเติม</h6>
+
+                                <!-- Quick amount buttons -->
+                                <div class="mb-3">
+                                    <button class="btn btn-outline-primary m-1 quick-amount" data-amount="50">&#3647;50</button>
+                                    <button class="btn btn-outline-primary m-1 quick-amount" data-amount="100">&#3647;100</button>
+                                    <button class="btn btn-outline-primary m-1 quick-amount" data-amount="200">&#3647;200</button>
+                                    <button class="btn btn-outline-primary m-1 quick-amount" data-amount="500">&#3647;500</button>
+                                    <button class="btn btn-outline-primary m-1 quick-amount" data-amount="1000">&#3647;1,000</button>
+                                </div>
+
+                                <div class="row justify-content-center">
+                                    <div class="col-md-4">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text">&#3647;</span>
+                                            <input type="number" class="form-control" id="topupAmount"
+                                                   placeholder="ระบุจำนวนเงิน" min="1" max="100000" step="0.01">
+                                            <span class="input-group-text">บาท</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button class="btn btn-primary btn-lg" id="generateQrBtn">
+                                    <i class="fa-solid fa-qrcode"></i> สร้าง QR Code
+                                </button>
+                            </div>
+
+                            <!-- ขั้นตอนที่ 2: แสดง QR Code -->
+                            <div id="step2" class="text-center" style="display: none;">
+                                <h6 class="mb-3">ขั้นตอนที่ 2: สแกน QR Code เพื่อโอนเงิน</h6>
+
+                              <div class="mb-3 d-flex justify-content-center">
+    <img id="qrCodeImage" src="" alt="PromptPay QR Code"
+         class="border rounded shadow-sm" style="max-width: 300px; width: 100%;">
+</div>
+
+                                <p class="text-muted">
+                                    จำนวนเงิน: <strong id="qrAmount" class="text-primary"></strong> บาท
+                                </p>
+                                <p class="text-muted small">
+                                    ชื่อบัญชี: <strong>Kriangkrai Prasert</strong><br>
+                                    ธนาคาร: <strong>กรุงไทย (KTB)</strong>
+                                </p>
+
+                                <hr>
+
+                                <h6 class="mb-3">ขั้นตอนที่ 3: อัพโหลดสลิปการโอนเงิน</h6>
+
+                                <form id="verifyForm" enctype="multipart/form-data">
+                                    <input type="hidden" id="verifyAmount" name="amount">
+                                    <div class="row justify-content-center">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="slipFile" class="form-label">เลือกรูปสลิป</label>
+                                                <input type="file" class="form-control" id="slipFile" name="file"
+                                                       accept="image/*" required>
+                                            </div>
+                                            <!-- Preview -->
+                                            <div id="slipPreview" class="mb-3" style="display: none;">
+                                                <img id="slipPreviewImg" src="" alt="Slip Preview"
+                                                     class="border rounded" style="max-width: 250px;">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-success btn-lg" id="verifyBtn">
+                                        <i class="fa-solid fa-check-circle"></i> ยืนยันการเติมเงิน
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-lg ms-2" id="cancelBtn">
+                                        <i class="fa-solid fa-arrow-left"></i> ย้อนกลับ
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- ผลลัพธ์ -->
+                            <div id="resultArea" class="mt-3" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <!-- ===== ส่วนโอนเงิน ===== -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fa-solid fa-paper-plane"></i> โอนเงินให้ผู้ใช้อื่น</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Step 1: ค้นหาผู้รับ -->
+                            <div id="transferStep1">
+                                <h6 class="mb-3 text-center">ค้นหาผู้รับเงินจากอีเมล</h6>
+                                <div class="row justify-content-center">
+                                    <div class="col-md-6">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
+                                            <input type="email" class="form-control" id="searchReceiverEmail"
+                                                   placeholder="กรอกอีเมลผู้รับ">
+                                            <button class="btn btn-success" id="searchReceiverBtn" type="button">
+                                                <i class="fa-solid fa-search"></i> ค้นหา
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="searchResult" style="display: none;"></div>
+                            </div>
+
+                            <!-- Step 2: กรอกจำนวนเงินและยืนยัน -->
+                            <div id="transferStep2" style="display: none;">
+                                <div class="text-center mb-3">
+                                    <h6>โอนเงินให้</h6>
+                                    <div class="d-inline-flex align-items-center border rounded p-3 bg-light">
+                                        <img id="receiverAvatar" src="" alt="" class="rounded-circle me-3"
+                                             style="width: 50px; height: 50px; object-fit: cover;"
+                                             onerror="this.src='/img/profile_img/default.jpg'">
+                                        <div class="text-start">
+                                            <strong id="receiverNameDisplay"></strong><br>
+                                            <small class="text-muted" id="receiverEmailDisplay"></small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row justify-content-center">
+                                    <div class="col-md-5">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text">&#3647;</span>
+                                            <input type="number" class="form-control" id="transferAmount"
+                                                   placeholder="จำนวนเงิน" min="1" max="100000" step="0.01">
+                                            <span class="input-group-text">บาท</span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <input type="text" class="form-control" id="transferNote"
+                                                   placeholder="หมายเหตุ (ไม่จำเป็น)" maxlength="200">
+                                        </div>
+                                        <input type="hidden" id="transferReceiverEmail">
+                                    </div>
+                                </div>
+
+                                <div class="text-center">
+                                    <button class="btn btn-success btn-lg" id="confirmTransferBtn">
+                                        <i class="fa-solid fa-paper-plane"></i> ยืนยันโอนเงิน
+                                    </button>
+                                    <button class="btn btn-secondary btn-lg ms-2" id="cancelTransferBtn">
+                                        <i class="fa-solid fa-arrow-left"></i> ย้อนกลับ
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- ผลลัพธ์การโอน -->
+                            <div id="transferResultArea" class="mt-3" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <!-- ===== ประวัติการโอนเงิน ===== -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fa-solid fa-exchange-alt"></i> ประวัติการโอนเงิน</h5>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${#lists.isEmpty(transfers)}" class="text-center text-muted py-3">
+                                ยังไม่มีประวัติการโอนเงิน
+                            </div>
+                            <div class="table-responsive" th:unless="${#lists.isEmpty(transfers)}">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>วันที่</th>
+                                            <th>ประเภท</th>
+                                            <th>จำนวนเงิน</th>
+                                            <th>ผู้ส่ง / ผู้รับ</th>
+                                            <th>หมายเหตุ</th>
+                                            <th>สถานะ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="tf, iterStat : ${transfers}">
+                                            <td th:text="${iterStat.count}"></td>
+                                            <td>
+                                                <small th:text="${#temporals.format(tf.createdAt, 'dd/MM/yyyy HH:mm')}"></small>
+                                            </td>
+                                            <td>
+                                                <span th:if="${tf.sender.id == user.id}" class="badge bg-danger">
+                                                    <i class="fa-solid fa-arrow-up"></i> โอนออก
+                                                </span>
+                                                <span th:if="${tf.receiver.id == user.id}" class="badge bg-success">
+                                                    <i class="fa-solid fa-arrow-down"></i> รับเข้า
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="fw-bold"
+                                                      th:classappend="${tf.sender.id == user.id} ? 'text-danger' : 'text-success'">
+                                                    <span th:if="${tf.sender.id == user.id}">-</span>
+                                                    <span th:if="${tf.receiver.id == user.id}">+</span>
+                                                    &#3647; <span th:text="${#numbers.formatDecimal(tf.amount, 1, 2)}"></span>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <small th:if="${tf.sender.id == user.id}">
+                                                    ถึง: <strong th:text="${tf.receiver.name}"></strong>
+                                                    <br><span class="text-muted" th:text="${tf.receiver.email}"></span>
+                                                </small>
+                                                <small th:if="${tf.receiver.id == user.id}">
+                                                    จาก: <strong th:text="${tf.sender.name}"></strong>
+                                                    <br><span class="text-muted" th:text="${tf.sender.email}"></span>
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <small th:text="${tf.note != null ? tf.note : '-'}"></small>
+                                            </td>
+                                            <td>
+                                                <span class="badge"
+                                                      th:classappend="${tf.status.name() == 'SUCCESS'} ? 'bg-success' : 'bg-danger'"
+                                                      th:text="${tf.status.name() == 'SUCCESS'} ? 'สำเร็จ' : 'ล้มเหลว'">
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== ประวัติธุรกรรม (เติมเงิน) ===== -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติการเติมเงิน</h5>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${#lists.isEmpty(transactions)}" class="text-center text-muted py-3">
+                                ยังไม่มีประวัติธุรกรรม
+                            </div>
+                            <div class="table-responsive" th:unless="${#lists.isEmpty(transactions)}">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>วันที่</th>
+                                            <th>จำนวนเงิน</th>
+                                            <th>สถานะ</th>
+                                            <th>อ้างอิง</th>
+                                            <th>หมายเหตุ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="tx, iterStat : ${transactions}">
+                                            <td th:text="${iterStat.count}"></td>
+                                            <td th:text="${tx.createdAt}"></td>
+                                            <td>
+                                                <span class="fw-bold" th:classappend="${tx.status.name() == 'SUCCESS'} ? 'text-success' : 'text-danger'">
+                                                    &#3647; <span th:text="${#numbers.formatDecimal(tx.amount, 1, 2)}"></span>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge"
+                                                      th:classappend="${tx.status.name() == 'SUCCESS'} ? 'bg-success' : (${tx.status.name() == 'PENDING'} ? 'bg-warning' : 'bg-danger')"
+                                                      th:text="${tx.status.name()}">
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <small th:text="${tx.refTransactionId != null ? tx.refTransactionId : '-'}"></small>
+                                            </td>
+                                            <td>
+                                                <small th:if="${tx.failureReason != null}" class="text-danger"
+                                                       th:text="${tx.failureReason}"></small>
+                                                <small th:if="${tx.failureReason == null && tx.senderName != null}"
+                                                       th:text="'จาก: ' + ${tx.senderName}"></small>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== JavaScript ===== -->
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function () {
+
+                const topupAmountInput = document.getElementById('topupAmount');
+                const generateQrBtn = document.getElementById('generateQrBtn');
+                const step1 = document.getElementById('step1');
+                const step2 = document.getElementById('step2');
+                const qrCodeImage = document.getElementById('qrCodeImage');
+                const qrAmount = document.getElementById('qrAmount');
+                const verifyAmount = document.getElementById('verifyAmount');
+                const verifyForm = document.getElementById('verifyForm');
+                const verifyBtn = document.getElementById('verifyBtn');
+                const cancelBtn = document.getElementById('cancelBtn');
+                const resultArea = document.getElementById('resultArea');
+                const slipFile = document.getElementById('slipFile');
+                const slipPreview = document.getElementById('slipPreview');
+                const slipPreviewImg = document.getElementById('slipPreviewImg');
+
+                // Quick amount buttons
+                document.querySelectorAll('.quick-amount').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        topupAmountInput.value = this.dataset.amount;
+                    });
+                });
+
+                // สร้าง QR Code ผ่าน promptpay.io
+                generateQrBtn.addEventListener('click', function () {
+                    const amount = parseFloat(topupAmountInput.value);
+                    if (!amount || amount <= 0 || amount > 100000) {
+                        alert('กรุณาระบุจำนวนเงินที่ถูกต้อง (1 - 100,000 บาท)');
+                        return;
+                    }
+
+                    generateQrBtn.disabled = true;
+                    generateQrBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> กำลังสร้าง QR...';
+
+                    fetch('/user/wallet/topup/qr?amount=' + amount)
+                        .then(res => res.json())
+                        .then(data => {
+                            generateQrBtn.disabled = false;
+                            generateQrBtn.innerHTML = '<i class="fa-solid fa-qrcode"></i> สร้าง QR Code';
+
+                            if (data.success) {
+                                // ใช้ URL รูป QR จาก promptpay.io
+                                qrCodeImage.src = data.qrImageUrl;
+                                qrAmount.textContent = parseFloat(data.amount).toLocaleString('th-TH', { minimumFractionDigits: 2 });
+                                verifyAmount.value = data.amount;
+
+                                step1.style.display = 'none';
+                                step2.style.display = 'block';
+                                resultArea.style.display = 'none';
+                            } else {
+                                alert(data.message || 'ไม่สามารถสร้าง QR Code ได้');
+                            }
+                        })
+                        .catch(err => {
+                            generateQrBtn.disabled = false;
+                            generateQrBtn.innerHTML = '<i class="fa-solid fa-qrcode"></i> สร้าง QR Code';
+                            alert('เกิดข้อผิดพลาด: ' + err.message);
+                        });
+                });
+
+                // ย้อนกลับ
+                cancelBtn.addEventListener('click', function () {
+                    step1.style.display = 'block';
+                    step2.style.display = 'none';
+                    resultArea.style.display = 'none';
+                });
+
+                // Preview slip image
+                slipFile.addEventListener('change', function () {
+                    if (this.files && this.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            slipPreviewImg.src = e.target.result;
+                            slipPreview.style.display = 'block';
+                        };
+                        reader.readAsDataURL(this.files[0]);
+                    }
+                });
+
+                // ส่งสลิปเพื่อยืนยัน
+                verifyForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+
+                    const formData = new FormData();
+                    formData.append('file', slipFile.files[0]);
+                    formData.append('amount', verifyAmount.value);
+
+                    verifyBtn.disabled = true;
+                    verifyBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> กำลังตรวจสอบ...';
+                    resultArea.style.display = 'none';
+
+                    fetch('/user/wallet/topup/verify', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        verifyBtn.disabled = false;
+                        verifyBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> ยืนยันการเติมเงิน';
+
+                        if (data.success) {
+                            resultArea.innerHTML =
+                                '<div class="alert alert-success text-center">' +
+                                '<h5><i class="fa-solid fa-check-circle"></i> ' + data.message + '</h5>' +
+                                '<p>จำนวนเงิน: <strong>&#3647;' + parseFloat(data.amount).toFixed(2) + '</strong></p>' +
+                                '<p>ยอดเงินคงเหลือใหม่: <strong>&#3647;' + parseFloat(data.newBalance).toFixed(2) + '</strong></p>' +
+                                '<button class="btn btn-primary mt-2" onclick="location.reload()">ตกลง</button>' +
+                                '</div>';
+                        } else {
+                            resultArea.innerHTML =
+                                '<div class="alert alert-danger text-center">' +
+                                '<h5><i class="fa-solid fa-times-circle"></i> การเติมเงินไม่สำเร็จ</h5>' +
+                                '<p>' + data.message + '</p>' +
+                                '</div>';
+                        }
+                        resultArea.style.display = 'block';
+                    })
+                    .catch(err => {
+                        verifyBtn.disabled = false;
+                        verifyBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> ยืนยันการเติมเงิน';
+                        resultArea.innerHTML =
+                            '<div class="alert alert-danger text-center">' +
+                            '<p>เกิดข้อผิดพลาด: ' + err.message + '</p>' +
+                            '</div>';
+                        resultArea.style.display = 'block';
+                    });
+                });
+
+                // ==================== TRANSFER ====================
+                const searchReceiverEmail = document.getElementById('searchReceiverEmail');
+                const searchReceiverBtn = document.getElementById('searchReceiverBtn');
+                const searchResult = document.getElementById('searchResult');
+                const transferStep1 = document.getElementById('transferStep1');
+                const transferStep2 = document.getElementById('transferStep2');
+                const transferAmount = document.getElementById('transferAmount');
+                const transferNote = document.getElementById('transferNote');
+                const transferReceiverEmail = document.getElementById('transferReceiverEmail');
+                const confirmTransferBtn = document.getElementById('confirmTransferBtn');
+                const cancelTransferBtn = document.getElementById('cancelTransferBtn');
+                const transferResultArea = document.getElementById('transferResultArea');
+                const receiverNameDisplay = document.getElementById('receiverNameDisplay');
+                const receiverEmailDisplay = document.getElementById('receiverEmailDisplay');
+                const receiverAvatar = document.getElementById('receiverAvatar');
+
+                // ค้นหาผู้รับ
+                searchReceiverBtn.addEventListener('click', function () {
+                    const email = searchReceiverEmail.value.trim();
+                    if (!email) {
+                        alert('กรุณากรอกอีเมลผู้รับ');
+                        return;
+                    }
+
+                    searchReceiverBtn.disabled = true;
+                    searchReceiverBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+                    fetch('/user/wallet/transfer/search?email=' + encodeURIComponent(email))
+                        .then(res => res.json())
+                        .then(data => {
+                            searchReceiverBtn.disabled = false;
+                            searchReceiverBtn.innerHTML = '<i class="fa-solid fa-search"></i> ค้นหา';
+
+                            if (data.success) {
+                                searchResult.innerHTML =
+                                    '<div class="alert alert-success text-center">' +
+                                    '<i class="fa-solid fa-user-check"></i> พบผู้ใช้: <strong>' + data.name + '</strong> (' + data.email + ')' +
+                                    '<br><button class="btn btn-success btn-sm mt-2" id="selectReceiverBtn">เลือกผู้รับนี้</button>' +
+                                    '</div>';
+                                searchResult.style.display = 'block';
+
+                                document.getElementById('selectReceiverBtn').addEventListener('click', function () {
+                                    receiverNameDisplay.textContent = data.name;
+                                    receiverEmailDisplay.textContent = data.email;
+                                    transferReceiverEmail.value = data.email;
+                                    if (data.profileImage) {
+                                        receiverAvatar.src = '/img/profile_img/' + data.profileImage;
+                                    } else {
+                                        receiverAvatar.src = '/img/profile_img/default.jpg';
+                                    }
+                                    transferStep1.style.display = 'none';
+                                    transferStep2.style.display = 'block';
+                                    transferResultArea.style.display = 'none';
+                                });
+                            } else {
+                                searchResult.innerHTML =
+                                    '<div class="alert alert-warning text-center">' +
+                                    '<i class="fa-solid fa-user-xmark"></i> ' + data.message +
+                                    '</div>';
+                                searchResult.style.display = 'block';
+                            }
+                        })
+                        .catch(err => {
+                            searchReceiverBtn.disabled = false;
+                            searchReceiverBtn.innerHTML = '<i class="fa-solid fa-search"></i> ค้นหา';
+                            alert('เกิดข้อผิดพลาด: ' + err.message);
+                        });
+                });
+
+                // Enter key on email search
+                searchReceiverEmail.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        searchReceiverBtn.click();
+                    }
+                });
+
+                // ย้อนกลับจากหน้าโอน
+                cancelTransferBtn.addEventListener('click', function () {
+                    transferStep1.style.display = 'block';
+                    transferStep2.style.display = 'none';
+                    transferResultArea.style.display = 'none';
+                    transferAmount.value = '';
+                    transferNote.value = '';
+                });
+
+                // ยืนยันโอนเงิน
+                confirmTransferBtn.addEventListener('click', function () {
+                    const amount = parseFloat(transferAmount.value);
+                    const receiverEmail = transferReceiverEmail.value;
+                    const note = transferNote.value.trim();
+
+                    if (!amount || amount <= 0) {
+                        alert('กรุณาระบุจำนวนเงินที่ถูกต้อง');
+                        return;
+                    }
+                    if (amount > 100000) {
+                        alert('โอนได้สูงสุด 100,000 บาทต่อครั้ง');
+                        return;
+                    }
+
+                    const receiverName = receiverNameDisplay.textContent;
+                    if (!confirm('ยืนยันโอนเงิน ฿' + amount.toFixed(2) + ' ให้ ' + receiverName + '?')) {
+                        return;
+                    }
+
+                    confirmTransferBtn.disabled = true;
+                    confirmTransferBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> กำลังโอน...';
+
+                    const formData = new FormData();
+                    formData.append('receiverEmail', receiverEmail);
+                    formData.append('amount', amount);
+                    if (note) formData.append('note', note);
+
+                    fetch('/user/wallet/transfer', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        confirmTransferBtn.disabled = false;
+                        confirmTransferBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ยืนยันโอนเงิน';
+
+                        if (data.success) {
+                            transferResultArea.innerHTML =
+                                '<div class="alert alert-success text-center">' +
+                                '<h5><i class="fa-solid fa-check-circle"></i> โอนเงินสำเร็จ!</h5>' +
+                                '<p>โอนให้ <strong>' + data.receiverName + '</strong></p>' +
+                                '<p>จำนวนเงิน: <strong>&#3647;' + parseFloat(data.amount).toFixed(2) + '</strong></p>' +
+                                '<p>ยอดเงินคงเหลือ: <strong>&#3647;' + parseFloat(data.newBalance).toFixed(2) + '</strong></p>' +
+                                '<button class="btn btn-primary mt-2" onclick="location.reload()">ตกลง</button>' +
+                                '</div>';
+                            transferStep2.style.display = 'none';
+                        } else {
+                            transferResultArea.innerHTML =
+                                '<div class="alert alert-danger text-center">' +
+                                '<h5><i class="fa-solid fa-times-circle"></i> โอนเงินไม่สำเร็จ</h5>' +
+                                '<p>' + data.message + '</p>' +
+                                '</div>';
+                        }
+                        transferResultArea.style.display = 'block';
+                    })
+                    .catch(err => {
+                        confirmTransferBtn.disabled = false;
+                        confirmTransferBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ยืนยันโอนเงิน';
+                        transferResultArea.innerHTML =
+                            '<div class="alert alert-danger text-center">' +
+                            '<p>เกิดข้อผิดพลาด: ' + err.message + '</p>' +
+                            '</div>';
+                        transferResultArea.style.display = 'block';
+                    });
+                });
+
+            });
+        </script>
+    </section>
+</body>
+</html>

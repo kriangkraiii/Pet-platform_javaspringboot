@@ -21,7 +21,7 @@ public class CommunityPost {
 	@JoinColumn(name = "pet_id", nullable = false)
 	private Pet pet;
 
-	@Column(length = 1000)
+	@Column(length = 5000)
 	private String description;
 
 	@Column(name = "post_image")
