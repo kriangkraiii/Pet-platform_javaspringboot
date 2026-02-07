@@ -39,21 +39,21 @@ public class SecurityConfig {
     }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(userDetailsService());
-        authenticationProvider.setPasswordEncoder(passwordEncoder());
-        return authenticationProvider;
+    public DaoAuthenticationProvider authenticationProvider(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
     }
     
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, DaoAuthenticationProvider authenticationProvider) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session
                 .maximumSessions(1)
                 .maxSessionsPreventsLogin(false)
             )
+            .authenticationProvider(authenticationProvider)
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/signin", "/register", "/saveUser", "/products/**", "/product/**", 
                                 "/static/**", "/css/**", "/js/**", "/img/**", "/img/profile_img/**",
