@@ -233,10 +233,8 @@ public class UserController {
 
 	@PostMapping("/update-profile")
 	public String updateProfile(@ModelAttribute UserDtls user, @RequestParam MultipartFile img, HttpSession session) {
-	    if (img != null && !img.isEmpty()) {
-	        String imageUrl = commonUtil.getImageUrl(img, BucketType.PROFILE.getId());
-	        user.setProfileImage(imageUrl);
-	    }
+	    String imageUrl = commonUtil.getImageUrl(img, BucketType.PROFILE.getId());
+	    user.setProfileImage(imageUrl);
 	    
 	    UserDtls updateUserProfile = userService.updateUserProfile(user, img);
 	    
@@ -244,9 +242,7 @@ public class UserController {
 	        session.setAttribute("errorMsg", "Profile not updated");
 	    } else {
 	        session.setAttribute("succMsg", "Profile Updated");
-	        if (img != null && !img.isEmpty()) {
-	            fileService.uploadFileS3(img, 3);
-	        }
+	        fileService.uploadFileS3(img, 3);
 	    }
 	    return "redirect:/user/profile";
 	}

@@ -39,27 +39,26 @@ public class SecurityConfig {
     }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder);
-        return provider;
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+        authenticationProvider.setUserDetailsService(userDetailsService());
+        authenticationProvider.setPasswordEncoder(passwordEncoder());
+        return authenticationProvider;
     }
     
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, DaoAuthenticationProvider authenticationProvider) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session
                 .maximumSessions(1)
                 .maxSessionsPreventsLogin(false)
             )
-            .authenticationProvider(authenticationProvider)
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/signin", "/register", "/saveUser", "/products/**", "/product/**", 
                                 "/static/**", "/css/**", "/js/**", "/img/**", "/img/profile_img/**",
                                 "/admin/css/**", "/admin/js/**", "/admin/img/**",
-                                "/forgot-password", "/reset-password", "/search",
-                                "/game_library").permitAll()
+                                "/forgot-password", "/reset-password", "/search").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/user/**").hasRole("USER")
                 .anyRequest().authenticated()

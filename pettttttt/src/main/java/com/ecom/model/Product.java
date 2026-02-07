@@ -27,18 +27,13 @@ public class Product {
 	private Double discountPrice;
 	private Boolean isActive;
 
-	@Column(length = 1000)
-	private String downloadLink;
-
-	private String fileSize;
-
 	// Default constructor
 	public Product() {
 	}
 
 	// All args constructor
 	public Product(Integer id, String title, String description, String category, Double price, int stock, String image,
-			int discount, Double discountPrice, Boolean isActive, String downloadLink, String fileSize) {
+			int discount, Double discountPrice, Boolean isActive) {
 		this.id = id;
 		this.title = title;
 		this.description = description;
@@ -49,8 +44,6 @@ public class Product {
 		this.discount = discount;
 		this.discountPrice = discountPrice;
 		this.isActive = isActive;
-		this.downloadLink = downloadLink;
-		this.fileSize = fileSize;
 	}
 
 	// Getters and Setters
@@ -132,21 +125,5 @@ public class Product {
 
 	public void setIsActive(Boolean isActive) {
 		this.isActive = isActive;
-	}
-
-	public String getDownloadLink() {
-		return downloadLink;
-	}
-
-	public void setDownloadLink(String downloadLink) {
-		this.downloadLink = downloadLink;
-	}
-
-	public String getFileSize() {
-		return fileSize;
-	}
-
-	public void setFileSize(String fileSize) {
-		this.fileSize = fileSize;
 	}
 }

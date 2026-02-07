@@ -34,7 +34,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -50,7 +49,6 @@ import com.ecom.service.FileService;
 import com.ecom.service.OrderService;
 import com.ecom.service.PetService;
 import com.ecom.service.ProductService;
-import com.ecom.service.SiteSettingService;
 import com.ecom.service.UserService;
 import com.ecom.util.BucketType;
 import com.ecom.util.CommonUtil;
@@ -92,57 +90,14 @@ public class AdminController {
 
 	@Autowired
 	private FileService fileService;
-
-	@Autowired
-	private SiteSettingService siteSettingService;
-
-
-
+	
+	
+	
 	// Consider adding more specific exception handling
 	@ExceptionHandler(IOException.class)
 	public String handleIOException(IOException e, HttpSession session) {
 	    session.setAttribute("errorMsg", "File operation failed");
 	    return "redirect:/admin/";
-	}
-
-	/**
-	 * Toggle image source mode between AWS and LOCAL (AJAX)
-	 */
-	@PostMapping("/toggle-image-mode")
-	@ResponseBody
-	public Map<String, Object> toggleImageMode(Principal p) {
-	    Map<String, Object> response = new HashMap<>();
-	    try {
-	        String newMode = siteSettingService.toggleImageMode();
-	        response.put("success", true);
-	        response.put("imageMode", newMode);
-	        response.put("message", "Image source switched to " + newMode);
-
-	        // Log the action
-	        if (p != null) {
-	            UserDtls admin = commonUtil.getLoggedInUserDetails(p);
-	            String ipAddress = getClientIpAddress(request);
-	            adminLogService.logAction(admin.getEmail(), admin.getName(),
-	                    "TOGGLE_IMAGE_MODE",
-	                    "Switched image mode to: " + newMode,
-	                    ipAddress);
-	        }
-	    } catch (Exception e) {
-	        response.put("success", false);
-	        response.put("message", "Failed to toggle image mode: " + e.getMessage());
-	    }
-	    return response;
-	}
-
-	/**
-	 * Get current image mode (AJAX)
-	 */
-	@GetMapping("/image-mode")
-	@ResponseBody
-	public Map<String, Object> getImageMode() {
-	    Map<String, Object> response = new HashMap<>();
-	    response.put("imageMode", siteSettingService.getImageMode());
-	    return response;
 	}
 
 
@@ -197,11 +152,7 @@ public class AdminController {
 
 	        if (!ObjectUtils.isEmpty(saveCategory)) {
 	            if (!file.isEmpty()) {
-	                String uploadDir = System.getProperty("user.dir") + "/uploads/category_img/";
-	                File uploadFolder = new File(uploadDir);
-	                if (!uploadFolder.exists()) { uploadFolder.mkdirs(); }
-	                Path path = Paths.get(uploadDir + file.getOriginalFilename());
-	                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+
 	            }
 
 	            session.setAttribute("succMsg", "Category saved successfully");
@@ -322,13 +273,15 @@ public class AdminController {
 
 	    Category oldCategory = categoryService.getCategoryById(category.getId());
 
+	 //   String imageName = file.isEmpty() ? oldCategory.getImageName() : file.getOriginalFilename();
+	    
+
+	    String imageUrl = commonUtil.getImageUrl(file, BucketType.CATEGORY.getId());
+	    
 	    if (!ObjectUtils.isEmpty(category)) {
 	        oldCategory.setName(category.getName());
 	        oldCategory.setIsActive(category.getIsActive());
-	        if (!file.isEmpty()) {
-	            String imageUrl = commonUtil.getImageUrl(file, BucketType.CATEGORY.getId());
-	            oldCategory.setImageName(imageUrl);
-	        }
+	        oldCategory.setImageName(imageUrl);
 	    }
 
 	    Category updateCategory = categoryService.saveCategory(oldCategory);
@@ -344,7 +297,8 @@ public class AdminController {
 
 	            Path path = Paths.get(uploadDir + file.getOriginalFilename());
 	            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-	            fileService.uploadFileS3(file, 1);
+	            
+	            
 	        }
 
 	        session.setAttribute("succMsg", "Category update success");
@@ -352,6 +306,7 @@ public class AdminController {
 	                                "UPDATE_CATEGORY", 
 	                                "Updated category: " + category.getName(), 
 	                                ipAddress);
+	        fileService.uploadFileS3(file, 1); // Upload to S3 bucket type 1 for category images
 	    } else {
 	        session.setAttribute("errorMsg", "something wrong on server");
 	        adminLogService.logAction(admin.getEmail(), admin.getName(), 
@@ -381,11 +336,7 @@ public class AdminController {
 
 	    if (!ObjectUtils.isEmpty(saveProduct)) {
 	        if (!image.isEmpty()) {
-	            String uploadDir = System.getProperty("user.dir") + "/uploads/product_img/";
-	            File uploadFolder = new File(uploadDir);
-	            if (!uploadFolder.exists()) { uploadFolder.mkdirs(); }
-	            Path path = Paths.get(uploadDir + image.getOriginalFilename());
-	            Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+	          
 	        }
 
 	        session.setAttribute("succMsg", "Product Saved Success");
@@ -684,11 +635,15 @@ public class AdminController {
 
 	    if (!ObjectUtils.isEmpty(saveUser)) {
 	        if (!file.isEmpty()) {
-	            String uploadDir = System.getProperty("user.dir") + "/uploads/profile_img/";
-	            File uploadFolder = new File(uploadDir);
-	            if (!uploadFolder.exists()) { uploadFolder.mkdirs(); }
-	            Path path = Paths.get(uploadDir + file.getOriginalFilename());
-	            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+//	            // Create external upload directory
+//	            String uploadDir = System.getProperty("user.dir") + "/uploads/profile_img/";
+//	            File uploadFolder = new File(uploadDir);
+//	            if (!uploadFolder.exists()) {
+//	                uploadFolder.mkdirs();
+//	            }
+//
+//	            Path path = Paths.get(uploadDir + file.getOriginalFilename());
+//	            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 	        }
 	        session.setAttribute("succMsg", "Register successfully");
 	        adminLogService.logAction(admin.getEmail(), admin.getName(), 
@@ -715,18 +670,14 @@ public class AdminController {
 
 	@PostMapping("/update-profile")
 	public String updateProfile(@ModelAttribute UserDtls user, @RequestParam MultipartFile img, HttpSession session) {
-		if (img != null && !img.isEmpty()) {
-			String imageUrl = commonUtil.getImageUrl(img, BucketType.PROFILE.getId());
-			user.setProfileImage(imageUrl);
-		}
 		UserDtls updateUserProfile = userService.updateUserProfile(user,img);
+		String imageUrl = commonUtil.getImageUrl(img, BucketType.PROFILE.getId());
+		user.setProfileImage(imageUrl);
 		if (ObjectUtils.isEmpty(updateUserProfile)) {
 			session.setAttribute("errorMsg", "Profile not updated");
 		} else {
 			session.setAttribute("succMsg", "Profile Updated");
-			if (img != null && !img.isEmpty()) {
-				fileService.uploadFileS3(img, 3);
-			}
+			fileService.uploadFileS3(img, 3);
 		}
 		return "redirect:/admin/profile";
 	}
@@ -948,27 +899,20 @@ public class AdminController {
 	    }
 
 	    try {
+	        String imageName = existingPet.getImagePet();
+	        String imageUrl = commonUtil.getImageUrl(imageFile, BucketType.PETPROFILE.getId());
+
 	        existingPet.setName(name);
 	        existingPet.setType(type);
 	        existingPet.setBreed(breed);
 	        existingPet.setDescription(description);
+	        existingPet.setImagePet(imageUrl);
 
 	        if (ownerId > 0) {
 	            UserDtls owner = userService.getUserById(ownerId);
 	            if (owner != null) {
 	                existingPet.setOwner(owner);
 	            }
-	        }
-
-	        if (!imageFile.isEmpty()) {
-	            String imageUrl = commonUtil.getImageUrl(imageFile, BucketType.PETPROFILE.getId());
-	            existingPet.setImagePet(imageUrl);
-	            String uploadDir = System.getProperty("user.dir") + "/uploads/pet_img/";
-	            File uploadFolder = new File(uploadDir);
-	            if (!uploadFolder.exists()) { uploadFolder.mkdirs(); }
-	            Path path = Paths.get(uploadDir + imageFile.getOriginalFilename());
-	            Files.copy(imageFile.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-	            fileService.uploadFileS3(imageFile, 4);
 	        }
 
 	        petService.updatePet(existingPet);
@@ -986,6 +930,7 @@ public class AdminController {
 	        );
 	        
 	        session.setAttribute("succUPMsg", "updated successfully!");
+	        fileService.uploadFileS3(imageFile, 4);
 	        
 	    } catch (Exception e) {  // Changed from IOException to Exception
 	        e.printStackTrace();
