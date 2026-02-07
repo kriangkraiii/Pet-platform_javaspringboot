@@ -106,17 +106,20 @@ public class ProductServiceImpl implements ProductService {
 
 	    Product dbProduct = getProductById(product.getId());
 
-	    //String imageName = image.isEmpty() ? dbProduct.getImage() : image.getOriginalFilename();
-	    String imageUrl = commonUtil.getImageUrl(image,BucketType.PRODUCT.getId()); 
+	    if (!image.isEmpty()) {
+	        String imageUrl = commonUtil.getImageUrl(image, BucketType.PRODUCT.getId());
+	        dbProduct.setImage(imageUrl);
+	    }
 
 	    dbProduct.setTitle(product.getTitle());
 	    dbProduct.setDescription(product.getDescription());
 	    dbProduct.setCategory(product.getCategory());
 	    dbProduct.setPrice(product.getPrice());
 	    dbProduct.setStock(product.getStock());
-	    dbProduct.setImage(imageUrl);
 	    dbProduct.setIsActive(product.getIsActive());
 	    dbProduct.setDiscount(product.getDiscount());
+	    dbProduct.setDownloadLink(product.getDownloadLink());
+	    dbProduct.setFileSize(product.getFileSize());
 
 	    // Calculate discount price
 	    Double discount = product.getPrice() * (product.getDiscount() / 100.0);

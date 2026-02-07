@@ -3,7 +3,7 @@
 	th:replace="~{base::layout(~{::section})}">
 <head>
 <meta charset="UTF-8">
-<title>Product Ordered Successfully</title>
+<title>Game Purchased Successfully</title>
 </head>
 <body>
 	<section>
@@ -11,12 +11,16 @@
 			<div class="row">
 				<div class="col-md-6 offset-md-3 text-center">
 					<i class="fa-solid fa-circle-check fa-5x text-success"></i>
-					<p class="fs-3">Product Ordered Successfully</p>
-					<p class="fs-4">Product will be delivered with in 7 days</p>
-					<p class="fs-4">Thank you.</p>
-					<div class="text-center">
-						<a href="/" class="btn btn-primary">Home</a> <a href="/user/user-orders"
-							class="btn btn-primary">Your Order</a>
+					<p class="fs-3 fw-bold mt-3">Game Purchased Successfully!</p>
+					<p class="fs-5 text-muted">Your game has been added to your Game Library</p>
+					<p class="fs-5">You can now download it from your library.</p>
+					<div class="text-center mt-4">
+						<a href="/user/game-library" class="btn btn-primary btn-lg me-2">
+							<i class="fa-solid fa-gamepad me-2"></i>Go to Game Library
+						</a>
+						<a href="/products" class="btn btn-outline-primary btn-lg">
+							<i class="fa-solid fa-store me-2"></i>Browse More Games
+						</a>
 					</div>
 				</div>
 			</div>

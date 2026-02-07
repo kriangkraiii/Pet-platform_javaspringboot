@@ -232,7 +232,6 @@ public class AdminCommunityController {
 
             UserDtls admin = userService.getUserByEmail(principal.getName());
             CommunityPost post = communityPostRepository.findById(postId).orElse(null);
-            String imageUrl = commonUtil.getImageUrl(postImage, BucketType.PETPOST.getId());
             
             if (post == null) {
                 redirectAttributes.addFlashAttribute("errorMsg", "Post not found.");
@@ -250,28 +249,16 @@ public class AdminCommunityController {
             post.setDescription(description);
 
             if (postImage != null && !postImage.isEmpty()) {
-                File staticDir = new ClassPathResource("static").getFile();
-
-                if (oldPostImage != null && !oldPostImage.equals("/upload/posts/default.jpg")) {
-                    String oldRelPath = oldPostImage.startsWith("/") ? oldPostImage.substring(1) : oldPostImage;
-                    File oldFile = new File(staticDir, oldRelPath);
-                    try {
-                        Files.deleteIfExists(oldFile.toPath());
-                    } catch (Exception e) {
-                        System.err.println("Failed to delete old image: " + e.getMessage());
-                    }
-                }
-
-                File uploadDir = new File(staticDir, "upload" + File.separator + "posts");
-                if (!uploadDir.exists()) {
-                    uploadDir.mkdirs();
-                }
-
-                String fileName = UUID.randomUUID() + "_" + postImage.getOriginalFilename();
-                Path dest = Paths.get(uploadDir.getAbsolutePath(), fileName);
+                // Save locally to uploads/posts/
+                String uploadPath = System.getProperty("user.dir") + "/uploads/posts/";
+                File uploadFolder = new File(uploadPath);
+                if (!uploadFolder.exists()) { uploadFolder.mkdirs(); }
+                Path dest = Paths.get(uploadPath, postImage.getOriginalFilename());
                 Files.copy(postImage.getInputStream(), dest, StandardCopyOption.REPLACE_EXISTING);
 
+                String imageUrl = commonUtil.getImageUrl(postImage, BucketType.PETPOST.getId());
                 post.setPostImage(imageUrl);
+                fileService.uploadFileS3(postImage, BucketType.PETPOST.getId());
             }
 
             communityPostRepository.save(post);
@@ -286,7 +273,6 @@ public class AdminCommunityController {
             );
 
             redirectAttributes.addFlashAttribute("succMsg", "Post updated successfully!");
-            fileService.uploadFileS3(postImage, BucketType.PETPOST.getId());
         } catch (Exception e) {
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMsg", "Failed to update post: " + e.getMessage());

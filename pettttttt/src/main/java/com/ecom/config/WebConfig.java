@@ -50,6 +50,9 @@ public class WebConfig implements WebMvcConfigurer {
 		String postUploadPath = System.getProperty("user.dir") + "/uploads/posts/";
 		registry.addResourceHandler("/uploads/posts/**").addResourceLocations("file:" + postUploadPath)
 				.setCachePeriod(3600);
+		registry.addResourceHandler("/upload/posts/**").addResourceLocations("file:" + postUploadPath,
+				"classpath:/static/upload/posts/")
+				.setCachePeriod(3600);
 		// Serve uploaded files from external directory
 		String uploadDir = System.getProperty("user.dir") + "/uploads/";
 

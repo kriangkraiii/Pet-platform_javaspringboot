@@ -58,7 +58,8 @@ public class SecurityConfig {
                 .requestMatchers("/", "/signin", "/register", "/saveUser", "/products/**", "/product/**", 
                                 "/static/**", "/css/**", "/js/**", "/img/**", "/img/profile_img/**",
                                 "/admin/css/**", "/admin/js/**", "/admin/img/**",
-                                "/forgot-password", "/reset-password", "/search").permitAll()
+                                "/forgot-password", "/reset-password", "/search",
+                                "/game_library").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/user/**").hasRole("USER")
                 .anyRequest().authenticated()

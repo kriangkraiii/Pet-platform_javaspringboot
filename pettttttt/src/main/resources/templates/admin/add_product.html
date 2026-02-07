@@ -18,7 +18,7 @@
 				<div class="col-md-6 offset-md-3">
 					<div class="card card-sh">
 						<div class="card-header text-center ">
-							<p class="fs-4">Add Product</p>
+							<p class="fs-4">Add Game</p>
 
 							<th:block th:if="${session.succMsg}">
 								<p class="text-success fw-bold">[[${session.succMsg}]]</p>
@@ -35,18 +35,18 @@
 							<form action="/admin/saveProduct" method="post"
 								enctype="multipart/form-data">
 								<div class="mb-3">
-									<label>Enter Title</label> <input type="text" name="title"
-										class="form-control" required>
-								</div>
+										<label>Game Title</label> <input type="text" name="title"
+											class="form-control" required>
+									</div>
 
-								<div class="mb-3">
-									<label>Enter Description</label>
-									<textarea rows="3" cols="" class="form-control"
-										name="description" required></textarea>
-								</div>
+									<div class="mb-3">
+										<label>Game Description</label>
+										<textarea rows="3" cols="" class="form-control"
+											name="description" required></textarea>
+									</div>
 
-								<div class="mb-3">
-									<label>Category</label> <select class="form-control"
+									<div class="mb-3">
+										<label>Genre</label> <select class="form-control"
 										name="category" required>
 										<option value="">--select--</option>
 										<option th:each="c:${categories}" th:value="${c.name}">[[${c.name}]]</option>
@@ -86,7 +86,18 @@
 											class="form-control" required accept="image/*">
 									</div>
 								</div>
-								<button type="submit" class="btn btn-primary col-md-12">Submit</button>
+
+								<div class="mb-3">
+									<label>Download Link (URL)</label> <input type="url" name="downloadLink"
+										class="form-control" placeholder="https://example.com/game-file.zip">
+								</div>
+
+								<div class="mb-3">
+									<label>File Size</label> <input type="text" name="fileSize"
+										class="form-control" placeholder="e.g. 2.5 GB">
+								</div>
+
+								<button type="submit" class="btn btn-primary col-md-12">Add Game</button>
 							</form>
 						</div>
 					</div>

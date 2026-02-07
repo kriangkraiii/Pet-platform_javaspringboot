@@ -23,6 +23,7 @@ import com.ecom.model.ProductOrder;
 import com.ecom.model.UserDtls;
 import com.ecom.repository.CartRepository;
 import com.ecom.repository.ProductOrderRepository;
+import com.ecom.service.GameLibraryService;
 import com.ecom.service.OrderService;
 import com.ecom.util.CommonUtil;
 import com.ecom.util.OrderStatus;
@@ -39,6 +40,9 @@ public class OrderServiceImpl implements OrderService {
 
 	@Autowired
 	private CommonUtil commonUtil;
+
+	@Autowired
+	private GameLibraryService gameLibraryService;
 
 	@Override
 	public Map<String, Long> getOrderStatusCounts() {
@@ -116,6 +120,10 @@ public class OrderServiceImpl implements OrderService {
 			order.setOrderAddress(address);
 
 			ProductOrder saveOrder = orderRepository.save(order);
+
+			// Add game to user's game library
+			gameLibraryService.addToLibrary(cart.getUser(), cart.getProduct(), saveOrder.getOrderId());
+
 			resetCart(cart.getUser());
 			commonUtil.sendMailForProductOrder(saveOrder, "success");
 		}

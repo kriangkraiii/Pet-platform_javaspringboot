@@ -161,7 +161,7 @@ public class CommunityController {
 	    }
 
 	    model.addAttribute("communityPosts", posts);
-	    return "community";
+	    return "user/community";
 	}
 
 
@@ -408,7 +408,7 @@ public class CommunityController {
 		model.addAttribute("postsCount", petPosts != null ? petPosts.size() : 0);
 		model.addAttribute("currentUser", currentUser);
 		
-		return "community_pet";
+		return "user/community_pet";
 	}
 	@PostMapping("/community/comment/{commentId}/edit")
 	@ResponseBody
@@ -511,7 +511,7 @@ public class CommunityController {
 		model.addAttribute("comments", comments);
 		model.addAttribute("commentCount", commentCount);
 
-		return "community_comments";
+		return "user/community_comments";
 	}
 
 	@PostMapping("/community/pet/{petId}/comments")
@@ -577,7 +577,7 @@ public class CommunityController {
 		model.addAttribute("likeCount", likeCount);
 		model.addAttribute("likedByCurrentUser", likedByCurrentUser);
 
-		return "community_comments";
+		return "user/community_comments";
 	}
 
 	@GetMapping("/community/post/{postId}/edit")
@@ -590,7 +590,7 @@ public class CommunityController {
 
 		model.addAttribute("post", post);
 		model.addAttribute("myPets", myPets);
-		return "updatePost"; // ไฟล์ updatePost.html
+		return "user/updatePost"; // ไฟล์ updatePost.html
 	}
 
 	/*
@@ -671,26 +671,21 @@ public class CommunityController {
 
 	    // อัปเดตรูปภาพโดยเขียนลง classpath: static/upload/posts
 	    if (postImage != null && !postImage.isEmpty()) {
-	        //String fileName = java.util.UUID.randomUUID() + "_" + postImage.getOriginalFilename();
-	        
-	        //String uploadDir = System.getProperty("user.dir") + "/uploads/posts/";
 	        String imageUrl = commonUtil.getImageUrl(postImage, BucketType.PETPOST.getId());
-	        //File uploadFolder = new File(uploadDir);
-//	        if (!uploadFolder.exists()) {
-//	            uploadFolder.mkdirs();
-//	        }
+	        
+	        // Save locally as fallback
+	        String uploadDir = System.getProperty("user.dir") + "/uploads/posts/";
+	        File uploadFolder = new File(uploadDir);
+	        if (!uploadFolder.exists()) { uploadFolder.mkdirs(); }
+	        Path path = Paths.get(uploadDir, postImage.getOriginalFilename());
+	        Files.copy(postImage.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
-	        //Path path = Paths.get(uploadDir, fileName);
-	        //Files.copy(postImage.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-
-	        // เก็บเฉพาะชื่อไฟล์
 	        post.setPostImage(imageUrl);
-	        //fileService.uploadFileS3(imageUrl	, 5);
+	        fileService.uploadFileS3(postImage, 5);
 	    }
 
 	    communityPostRepository.save(post);
 	    session.setAttribute("succMsg", "Post updated successfully!");
-	    fileService.uploadFileS3(postImage	, 5);
 
 	    return "redirect:/community";
 	}

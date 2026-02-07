@@ -85,17 +85,17 @@ public class HomeController {
 				.sorted((p1, p2) -> p2.getId().compareTo(p1.getId())).limit(8).toList();
 		m.addAttribute("category", allActiveCategory);
 		m.addAttribute("products", allActiveProducts);
-		return "index";
+		return "guest/index";
 	}
 
 	@GetMapping("/signin")
 	public String login() {
-		return "login";
+		return "guest/login";
 	}
 
 	@GetMapping("/register")
 	public String register() {
-		return "register";
+		return "guest/register";
 	}
 
 	@GetMapping("/products")
@@ -127,14 +127,14 @@ public class HomeController {
 		m.addAttribute("isFirst", page.isFirst());
 		m.addAttribute("isLast", page.isLast());
 
-		return "product";
+		return "guest/product";
 	}
 
 	@GetMapping("/product/{id}")
 	public String product(@PathVariable int id, Model m) {
 		Product productById = productService.getProductById(id);
 		m.addAttribute("product", productById);
-		return "view_product";
+		return "guest/view_product";
 	}
 
 	@PostMapping("/saveUser")
@@ -171,7 +171,7 @@ public class HomeController {
 
 	@GetMapping("/forgot-password")
 	public String showForgotPassword() {
-		return "forgot_password.html";
+		return "guest/forgot_password";
 	}
 
 	@PostMapping("/forgot-password")
@@ -211,10 +211,10 @@ public class HomeController {
 
 		if (userByToken == null) {
 			m.addAttribute("msg", "Your link is invalid or expired !!");
-			return "message";
+			return "guest/message";
 		}
 		m.addAttribute("token", token);
-		return "reset_password";
+		return "guest/reset_password";
 	}
 
 	@PostMapping("/reset-password")
@@ -229,7 +229,7 @@ public class HomeController {
 	    if (userByToken == null) {
 	        System.out.println("Invalid token: " + token);
 	        m.addAttribute("msg", "Your link is invalid or expired !!");
-	        return "message";
+	        return "guest/message";
 	    }
 	    
 	    System.out.println("Valid token for user: " + userByToken.getEmail());
@@ -239,14 +239,14 @@ public class HomeController {
 	    if (!password.equals(confirmPassword)) {
 	        session.setAttribute("errorMsg", "Passwords do not match!");
 	        m.addAttribute("token", token);
-	        return "reset_password";
+	        return "guest/reset_password";
 	    }
 	    
 	    // Optional: Add password strength validation
 	    if (password.length() < 6) {
 	        session.setAttribute("errorMsg", "Password must be at least 6 characters long!");
 	        m.addAttribute("token", token);
-	        return "reset_password";
+	        return "guest/reset_password";
 	    }
 	    
 	    userByToken.setPassword(passwordEncoder.encode(password));
@@ -265,7 +265,7 @@ public class HomeController {
 		m.addAttribute("products", searchProducts);
 		List<Category> categories = categoryService.getAllActiveCategory();
 		m.addAttribute("categories", categories);
-		return "product";
+		return "guest/product";
 
 	}
 

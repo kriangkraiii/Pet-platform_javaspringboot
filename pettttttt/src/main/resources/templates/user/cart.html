@@ -3,7 +3,7 @@
 	th:replace="~{base::layout(~{::section})}">
 <head>
 <meta charset="UTF-8">
-<title>Cart</title>
+<title>Shopping Cart</title>
 </head>
 <body>
 	<section>
@@ -11,7 +11,7 @@
 
 			<div class="card card-sh">
 				<div class="card-header text-center">
-					<p class="fs-4">Cart</p>
+					<p class="fs-4"><i class="fa-solid fa-cart-shopping me-2"></i>Shopping Cart</p>
 					<th:block th:if="${session.succMsg}">
 						<p class="text-success fw-bold">[[${session.succMsg}]]</p>
 						<th:block th:text="${@commnServiceImpl.removeSessionMessage()}"></th:block>
@@ -28,7 +28,7 @@
 							<tr>
 								<th scope="col">Sl No</th>
 								<th scope="col">Image</th>
-								<th scope="col">Product Name</th>
+								<th scope="col">Game</th>
 								<th scope="col">Price</th>
 								<th scope="col" class="text-center">Quantity</th>
 								<th scope="col">Total Price</th>
@@ -101,7 +101,7 @@
 						</a>
 						<a href="/products" class="btn btn-secondary">
 							<i class="fa-solid fa-arrow-left me-2"></i>
-							Continue Shopping
+							Browse More Games
 						</a>
 					</div>
 				</div>

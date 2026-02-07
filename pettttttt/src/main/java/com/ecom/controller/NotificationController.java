@@ -79,7 +79,7 @@ public class NotificationController {
         model.addAttribute("notifications", notifications);
         model.addAttribute("user", user);
         
-        return "notifications";
+        return "user/notifications";
     }
 
     @GetMapping("/count")

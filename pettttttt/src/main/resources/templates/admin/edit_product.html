@@ -3,7 +3,7 @@
 	th:replace="~{base::layout(~{::section})}">
 <head>
 <meta charset="UTF-8">
-<title>Edit Product</title>
+<title>Edit Game</title>
 </head>
 <body>
 	<section>
@@ -12,7 +12,7 @@
 				<div class="col-md-8 offset-md-2">
 					<div class="card card-sh">
 						<div class="card-header text-center ">
-							<p class="fs-4">Edit Product</p>
+							<p class="fs-4">Edit Game</p>
 
 							<th:block th:if="${session.succMsg}">
 								<p class="text-success fw-bold">[[${session.succMsg}]]</p>
@@ -30,18 +30,18 @@
 								enctype="multipart/form-data">
 								<input type="hidden" name="id" th:value="${product.id}">
 								<div class="mb-3">
-									<label>Enter Title</label> <input type="text" name="title"
-										th:value="${product.title}" class="form-control">
-								</div>
+										<label>Game Title</label> <input type="text" name="title"
+											th:value="${product.title}" class="form-control">
+									</div>
 
-								<div class="mb-3">
-									<label>Enter Description</label>
+									<div class="mb-3">
+										<label>Game Description</label>
 									<textarea rows="3" cols="" class="form-control"
 										name="description">[[${product.description}]]</textarea>
 								</div>
 								<div class="row">
 									<div class="mb-3 col">
-										<label>Category</label> <select class="form-control"
+										<label>Genre</label> <select class="form-control"
 											name="category">
 											<option value="">None</option>
 											<option th:each="cat : ${categories}"
@@ -105,12 +105,25 @@
 									</div>
 
 								</div>
+
+								<div class="mb-3">
+									<label>Download Link (URL)</label> <input type="url" name="downloadLink"
+										th:value="${product.downloadLink}" class="form-control"
+										placeholder="https://example.com/game-file.zip">
+								</div>
+
+								<div class="mb-3">
+									<label>File Size</label> <input type="text" name="fileSize"
+										th:value="${product.fileSize}" class="form-control"
+										placeholder="e.g. 2.5 GB">
+								</div>
+
 								<div class="row">
 									<div class="col-md-6">
 										<a href="/admin/products" class="btn btn-secondary col-md-12">Back</a>
 									</div>
 									<div class="col-md-6">
-										<button class="btn btn-primary col-md-12">Update</button>
+										<button class="btn btn-primary col-md-12">Update Game</button>
 									</div>
 								</div>
 							</form>

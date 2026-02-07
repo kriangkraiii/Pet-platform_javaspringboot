@@ -9,8 +9,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-import java.nio.file.StandardCopyOption;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -180,9 +178,8 @@ private FileServiceImpl fileServiceImpl;
 	public UserDtls updateUserProfile(UserDtls user, MultipartFile img) {
 	    UserDtls dbUser = userRepository.findById(user.getId()).get();
 
-	    if (!img.isEmpty()) {
-	    	String imageUrl = commonUtil.getImageUrl(img,BucketType.PROFILE.getId());
-	        dbUser.setProfileImage(imageUrl);
+	    if (user.getProfileImage() != null && !user.getProfileImage().isEmpty()) {
+	        dbUser.setProfileImage(user.getProfileImage());
 	    }
 
 	    if (!ObjectUtils.isEmpty(dbUser)) {
@@ -197,23 +194,15 @@ private FileServiceImpl fileServiceImpl;
 
 	    try {
 	        if (!img.isEmpty()) {
-	            String originalFilename = img.getOriginalFilename();
-	            String fileName = UUID.randomUUID().toString() + "_" + originalFilename.replaceAll("\\s+", "_");
-	            fileServiceImpl.uploadFileS3(img, BucketType.PROFILE.getId());
-	            // เก็บไฟล์ใน external directory เหมือน pet images
+	            // Save locally with original filename
 	            String uploadDir = System.getProperty("user.dir") + "/uploads/profile_img/";
-	        	String imageUrl = commonUtil.getImageUrl(img,BucketType.PROFILE.getId());
 	            File uploadFolder = new File(uploadDir);
 	            if (!uploadFolder.exists()) {
 	                uploadFolder.mkdirs();
 	            }
 
-	            Path filePath = Paths.get(uploadDir, fileName);
+	            Path filePath = Paths.get(uploadDir, img.getOriginalFilename());
 	            Files.copy(img.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-	            
-	            // เก็บแค่ชื่อไฟล์ใน database
-	            dbUser.setProfileImage(imageUrl);
-	            userRepository.save(dbUser);
 	        }
 	    } catch (Exception e) {
 	        e.printStackTrace();
